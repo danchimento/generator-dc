@@ -4,7 +4,9 @@ const chalk = require("chalk");
 const { snakeCase } = require("snake-case");
 
 module.exports = class extends Generator {
-  prompting() {
+  initializing() {}
+
+  async prompting() {
     this.log(`Welcome to ${chalk.red("d-constructor")}.`);
 
     var prompts = [
@@ -15,32 +17,42 @@ module.exports = class extends Generator {
       }
     ];
 
-    return this.prompt(prompts).then(props => {
-      this.props = props;
+    let answers1 = await this.prompt(prompts);
 
-      prompts = [
-        {
-          type: "input",
-          name: "projectName",
-          message: "Project Name: ",
-          default: snakeCase(props.appName)
-        }
-      ];
+    prompts = [
+      {
+        type: "input",
+        name: "projectName",
+        message: "Project Name: ",
+        default: snakeCase(answers1.appName)
+      }
+    ];
 
-      return this.prompt(prompts).then(props => {
-        this.props = { ...props, ...this.props }
-      });
+    let answers2 = await this.prompt(prompts);
+
+    this.props = {
+      ...answers1,
+      ...answers2,
+      path: `./${answers2.projectName}`
+    };
+
+    this.composeWith("dc:repo", {
+      path: this.props.path,
+      defaultName: this.props.projectName
     });
   }
 
-  writing() {
-    this.fs.copy(
-      this.templatePath(),
-      this.destinationPath(`${this.props.projectName}`)
+  async writing() {
+    this.fs.copyTpl(
+      this.templatePath("**/!(_)*"),
+      this.props.path,
+      null,
+      null,
+      { globOptions: { dot: true } }
     );
   }
 
   install() {
-    this.npmInstall();
+    this.spawnCommandSync("npm", ["install"], { cwd: this.props.path });
   }
 };

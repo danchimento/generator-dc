@@ -25,14 +25,18 @@ module.exports = class extends Generator {
       this.props
     );
 
-    const source = this.fs.read(this.destinationPath('src/App.js'));
+    const source = this.fs.read(this.destinationPath("src/App.js"));
 
     const ast = parse(source);
 
-    addImport(ast, this.props.serviceName, `./Services/${this.props.serviceName}`);
-    
+    addImport(
+      ast,
+      this.props.serviceName,
+      `./Services/${this.props.serviceName}`
+    );
+
     const code = generate(ast, source);
 
-    this.fs.write(this.destinationPath('src/App.js'), code);
+    this.fs.write(this.destinationPath("src/App.js"), code);
   }
 };
